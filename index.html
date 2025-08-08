@@ -85,6 +85,10 @@
             position: relative;
         }
         
+        .mat-step-header-done .mat-step-icon .step-number {
+            display: none;
+        }
+        
         .mat-step-header-selected .mat-step-icon {
             background-color: #1976d2;
             color: white;
@@ -92,14 +96,20 @@
         
         .mat-step-header-done .mat-step-icon {
             background-color: #1976d2;
-            color: white;
+            color: transparent; /* Hide the number text */
+            position: relative;
         }
         
-        .mat-step-header-done .mat-step-icon::after {
-            content: 'check';
-            font-family: 'Material Symbols Outlined';
-            font-size: 16px;
+        .mat-step-header-done .mat-step-icon::before {
+            content: '✓';
             position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
         }
         
         .mat-step-label {
@@ -272,19 +282,19 @@
             <div class="mat-stepper-horizontal">
                 <div class="mat-horizontal-stepper-header-container">
                     <div class="mat-horizontal-stepper-header mat-step-header-selected" data-step="0" onclick="navigateToStep(0)">
-                        <div class="mat-step-icon">1</div>
+                        <div class="mat-step-icon"><span class="step-number">1</span></div>
                         <div class="mat-step-label">Select Zone</div>
                     </div>
                     <div class="mat-horizontal-stepper-header mat-step-disabled" data-step="1" onclick="navigateToStep(1)">
-                        <div class="mat-step-icon">2</div>
+                        <div class="mat-step-icon"><span class="step-number">2</span></div>
                         <div class="mat-step-label">Select Section</div>
                     </div>
                     <div class="mat-horizontal-stepper-header mat-step-disabled" data-step="2" onclick="navigateToStep(2)">
-                        <div class="mat-step-icon">3</div>
+                        <div class="mat-step-icon"><span class="step-number">3</span></div>
                         <div class="mat-step-label">Select Shelf</div>
                     </div>
                     <div class="mat-horizontal-stepper-header mat-step-disabled" data-step="3" onclick="navigateToStep(3)">
-                        <div class="mat-step-icon">4</div>
+                        <div class="mat-step-icon"><span class="step-number">4</span></div>
                         <div class="mat-step-label">Select Storage Unit</div>
                     </div>
                 </div>
