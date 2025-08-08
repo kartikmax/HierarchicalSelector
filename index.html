@@ -53,6 +53,24 @@
             cursor: pointer;
             transition: background-color 0.2s;
             position: relative;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .step:last-child {
+            border-right: none;
+        }
+        
+        .step:hover:not(.active) {
+            background-color: #e3f2fd;
+        }
+        
+        .step.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .step.disabled:hover {
+            background-color: inherit;
         }
         
         .step.active {
@@ -184,10 +202,10 @@
         
         <div class="stepper-container">
             <div class="stepper-header">
-                <div class="step active" data-step="0">Select Zone</div>
-                <div class="step" data-step="1">Select Section</div>
-                <div class="step" data-step="2">Select Shelf</div>
-                <div class="step" data-step="3">Select Storage Unit</div>
+                <div class="step active" data-step="0" onclick="navigateToStep(0)">Select Zone</div>
+                <div class="step" data-step="1" onclick="navigateToStep(1)">Select Section</div>
+                <div class="step" data-step="2" onclick="navigateToStep(2)">Select Shelf</div>
+                <div class="step" data-step="3" onclick="navigateToStep(3)">Select Storage Unit</div>
             </div>
             
             <div class="step-content">
@@ -346,7 +364,43 @@
         // Initialize the application
         function init() {
             populateZones();
-            updateStepperUI();
+            updateStepperClickability();
+        }
+        
+        function setupStepperClickHandlers() {
+            // Click handlers are already set in HTML onclick attributes
+            updateStepperClickability();
+        }
+        
+        function updateStepperClickability() {
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, index) => {
+                const stepIndex = parseInt(step.dataset.step);
+                
+                // Enable clicking on completed steps and current step
+                if (stepIndex <= currentStep || 
+                    (stepIndex === 1 && selection.selectedZone) ||
+                    (stepIndex === 2 && selection.selectedSection) ||
+                    (stepIndex === 3 && selection.selectedShelf)) {
+                    step.classList.remove('disabled');
+                } else {
+                    step.classList.add('disabled');
+                }
+            });
+        }
+        
+        function navigateToStep(targetStep) {
+            // Check if navigation is allowed
+            if (targetStep > currentStep) {
+                // Can only go forward if previous steps are completed
+                if (targetStep === 1 && !selection.selectedZone) return;
+                if (targetStep === 2 && !selection.selectedSection) return;
+                if (targetStep === 3 && !selection.selectedShelf) return;
+            }
+            
+            // Allow navigation
+            goToStep(targetStep);
+            updateStepperClickability();
         }
 
         function populateZones() {
@@ -492,6 +546,13 @@
             }
             
             currentStep = stepIndex;
+            
+            // Clear the complete button if we're not on the last step
+            if (stepIndex !== 3) {
+                document.getElementById('completeBtn').style.display = 'none';
+            } else if (selection.selectedStorageUnit) {
+                document.getElementById('completeBtn').style.display = 'inline-block';
+            }
         }
 
         function highlightSelectedRow(stepIndex, selectedValue) {
@@ -523,6 +584,9 @@
             } else {
                 document.getElementById('selectionSummary').classList.add('hidden');
             }
+            
+            // Update stepper clickability when selection changes
+            updateStepperClickability();
         }
 
         function filterTable(stepIndex, searchValue) {
