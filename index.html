@@ -89,10 +89,15 @@
         
         .search-container {
             margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         
         .search-field {
-            width: 100%;
+            flex: 1;
+            min-width: 250px;
             max-width: 400px;
             padding: 12px 16px;
             border: 1px solid #ddd;
@@ -233,6 +238,7 @@
                 <div id="step1" class="step-panel hidden">
                     <h3 id="sectionTitle">Choose a Section</h3>
                     <div class="search-container">
+                        <button class="btn btn-secondary" onclick="goToStep(0)">← Back</button>
                         <input type="text" class="search-field" placeholder="Search sections..." onkeyup="filterTable(1, this.value)">
                     </div>
                     <table class="data-table">
@@ -247,15 +253,13 @@
                             <!-- Populated by JavaScript -->
                         </tbody>
                     </table>
-                    <div class="step-actions">
-                        <button class="btn btn-secondary" onclick="goToStep(0)">Back</button>
-                    </div>
                 </div>
                 
                 <!-- Step 2: Shelves -->
                 <div id="step2" class="step-panel hidden">
                     <h3 id="shelfTitle">Choose a Shelf</h3>
                     <div class="search-container">
+                        <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
                         <input type="text" class="search-field" placeholder="Search shelves..." onkeyup="filterTable(2, this.value)">
                     </div>
                     <table class="data-table">
@@ -270,15 +274,13 @@
                             <!-- Populated by JavaScript -->
                         </tbody>
                     </table>
-                    <div class="step-actions">
-                        <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
-                    </div>
                 </div>
                 
                 <!-- Step 3: Storage Units -->
                 <div id="step3" class="step-panel hidden">
                     <h3 id="storageTitle">Choose a Storage Unit</h3>
                     <div class="search-container">
+                        <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
                         <input type="text" class="search-field" placeholder="Search storage units..." onkeyup="filterTable(3, this.value)">
                     </div>
                     <table class="data-table">
@@ -296,7 +298,6 @@
                         </tbody>
                     </table>
                     <div class="step-actions">
-                        <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
                         <button class="btn btn-primary" onclick="completeSelection()" id="completeBtn" style="display: none;">Complete Selection</button>
                     </div>
                 </div>
