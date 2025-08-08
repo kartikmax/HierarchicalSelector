@@ -1,0 +1,233 @@
+<div class="warehouse-stepper-container">
+  <!-- Selection Summary -->
+  <div class="selection-summary" *ngIf="getSelectionSummary()">
+    <mat-icon>location_on</mat-icon>
+    <span>Current Path: {{ getSelectionSummary() }}</span>
+    <button mat-icon-button (click)="resetStepper()" matTooltip="Reset Selection">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Material Stepper -->
+  <mat-stepper #stepper orientation="horizontal" linear="false" class="warehouse-stepper">
+    
+    <!-- Step 1: Select Zone -->
+    <mat-step [stepControl]="zoneFormGroup" label="Select Zone">
+      <form [formGroup]="zoneFormGroup">
+        <div class="step-header">
+          <h3>Choose a Zone</h3>
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search zones...</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput formControlName="search" placeholder="Enter zone name or code">
+          </mat-form-field>
+        </div>
+
+        <div class="table-container">
+          <mat-spinner *ngIf="loadingZones" class="loading-spinner"></mat-spinner>
+          
+          <mat-table [dataSource]="zonesDataSource" class="selection-table" *ngIf="!loadingZones">
+            <ng-container matColumnDef="zoneCode">
+              <mat-header-cell *matHeaderCellDef>Zone Code</mat-header-cell>
+              <mat-cell *matCellDef="let zone">{{ zone.zoneCode }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+              <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+              <mat-cell *matCellDef="let zone">{{ zone.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="description">
+              <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+              <mat-cell *matCellDef="let zone">{{ zone.description }}</mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="zoneColumns"></mat-header-row>
+            <mat-row 
+              *matRowDef="let zone; columns: zoneColumns;" 
+              (click)="onZoneSelect(zone)"
+              [class.selected-row]="selection.selectedZone?.zoneCode === zone.zoneCode"
+              class="clickable-row">
+            </mat-row>
+          </mat-table>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2: Select Section -->
+    <mat-step [stepControl]="sectionFormGroup" label="Select Section">
+      <form [formGroup]="sectionFormGroup">
+        <div class="step-header">
+          <h3>Choose a Section in Zone {{ selection.selectedZone?.name }}</h3>
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search sections...</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput formControlName="search" placeholder="Enter section name or code">
+          </mat-form-field>
+        </div>
+
+        <div class="table-container">
+          <mat-spinner *ngIf="loadingSections" class="loading-spinner"></mat-spinner>
+          
+          <mat-table [dataSource]="sectionsDataSource" class="selection-table" *ngIf="!loadingSections">
+            <ng-container matColumnDef="sectionCode">
+              <mat-header-cell *matHeaderCellDef>Section Code</mat-header-cell>
+              <mat-cell *matCellDef="let section">{{ section.sectionCode }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+              <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+              <mat-cell *matCellDef="let section">{{ section.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="description">
+              <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+              <mat-cell *matCellDef="let section">{{ section.description }}</mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="sectionColumns"></mat-header-row>
+            <mat-row 
+              *matRowDef="let section; columns: sectionColumns;" 
+              (click)="onSectionSelect(section)"
+              [class.selected-row]="selection.selectedSection?.sectionCode === section.sectionCode"
+              class="clickable-row">
+            </mat-row>
+          </mat-table>
+
+          <div class="no-data" *ngIf="sectionsDataSource.data.length === 0 && !loadingSections">
+            <mat-icon>info</mat-icon>
+            <p>No sections found for the selected zone</p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 3: Select Shelf -->
+    <mat-step [stepControl]="shelfFormGroup" label="Select Shelf">
+      <form [formGroup]="shelfFormGroup">
+        <div class="step-header">
+          <h3>Choose a Shelf in Section {{ selection.selectedSection?.name }}</h3>
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search shelves...</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput formControlName="search" placeholder="Enter shelf name or code">
+          </mat-form-field>
+        </div>
+
+        <div class="table-container">
+          <mat-spinner *ngIf="loadingShelves" class="loading-spinner"></mat-spinner>
+          
+          <mat-table [dataSource]="shelvesDataSource" class="selection-table" *ngIf="!loadingShelves">
+            <ng-container matColumnDef="shelfCode">
+              <mat-header-cell *matHeaderCellDef>Shelf Code</mat-header-cell>
+              <mat-cell *matCellDef="let shelf">{{ shelf.shelfCode }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+              <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+              <mat-cell *matCellDef="let shelf">{{ shelf.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="description">
+              <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+              <mat-cell *matCellDef="let shelf">{{ shelf.description }}</mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="shelfColumns"></mat-header-row>
+            <mat-row 
+              *matRowDef="let shelf; columns: shelfColumns;" 
+              (click)="onShelfSelect(shelf)"
+              [class.selected-row]="selection.selectedShelf?.shelfCode === shelf.shelfCode"
+              class="clickable-row">
+            </mat-row>
+          </mat-table>
+
+          <div class="no-data" *ngIf="shelvesDataSource.data.length === 0 && !loadingShelves">
+            <mat-icon>info</mat-icon>
+            <p>No shelves found for the selected section</p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 4: Select Storage Unit -->
+    <mat-step [stepControl]="storageUnitFormGroup" label="Select Storage Unit">
+      <form [formGroup]="storageUnitFormGroup">
+        <div class="step-header">
+          <h3>Choose a Storage Unit in Shelf {{ selection.selectedShelf?.name }}</h3>
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search storage units...</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput formControlName="search" placeholder="Enter storage unit name or code">
+          </mat-form-field>
+        </div>
+
+        <div class="table-container">
+          <mat-spinner *ngIf="loadingStorageUnits" class="loading-spinner"></mat-spinner>
+          
+          <mat-table [dataSource]="storageUnitsDataSource" class="selection-table" *ngIf="!loadingStorageUnits">
+            <ng-container matColumnDef="storageUnitCode">
+              <mat-header-cell *matHeaderCellDef>Unit Code</mat-header-cell>
+              <mat-cell *matCellDef="let unit">{{ unit.storageUnitCode }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+              <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+              <mat-cell *matCellDef="let unit">{{ unit.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="capacity">
+              <mat-header-cell *matHeaderCellDef>Capacity</mat-header-cell>
+              <mat-cell *matCellDef="let unit">{{ unit.capacity || 'N/A' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="currentOccupancy">
+              <mat-header-cell *matHeaderCellDef>Current</mat-header-cell>
+              <mat-cell *matCellDef="let unit">{{ unit.currentOccupancy || 'N/A' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="occupancyRate">
+              <mat-header-cell *matHeaderCellDef>Occupancy</mat-header-cell>
+              <mat-cell *matCellDef="let unit" [ngClass]="getOccupancyClass(unit)">
+                {{ getOccupancyRate(unit) }}
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="storageUnitColumns"></mat-header-row>
+            <mat-row 
+              *matRowDef="let unit; columns: storageUnitColumns;" 
+              (click)="onStorageUnitSelect(unit)"
+              [class.selected-row]="selection.selectedStorageUnit?.storageUnitCode === unit.storageUnitCode"
+              class="clickable-row">
+            </mat-row>
+          </mat-table>
+
+          <div class="no-data" *ngIf="storageUnitsDataSource.data.length === 0 && !loadingStorageUnits">
+            <mat-icon>info</mat-icon>
+            <p>No storage units found for the selected shelf</p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            *ngIf="selection.selectedStorageUnit"
+            (click)="resetStepper()">
+            Complete Selection
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+  </mat-stepper>
+</div>

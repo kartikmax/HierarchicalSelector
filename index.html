@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@angular/material@19/prebuilt-themes/indigo-pink.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #fafafa;
+        }
+        
+        .toolbar {
+            background-color: #1976d2;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .app-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .stepper-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .stepper-header {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .step {
+            flex: 1;
+            padding: 16px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        
+        .step.active {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .step.completed {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .step-content {
+            padding: 24px;
+        }
+        
+        .search-container {
+            margin-bottom: 24px;
+        }
+        
+        .search-field {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .data-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .data-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .data-table tbody tr.selected {
+            background-color: #e3f2fd;
+        }
+        
+        .selection-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        
+        .step-actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+        
+        .btn-secondary {
+            background-color: #666;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .occupancy-low { color: #4caf50; font-weight: 500; }
+        .occupancy-medium { color: #ff9800; font-weight: 500; }
+        .occupancy-high { color: #f44336; font-weight: 500; }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <span class="material-icons">warehouse</span>
+        <span>Warehouse Management System</span>
+    </div>
+    
+    <div class="app-container">
+        <div id="selectionSummary" class="selection-summary hidden">
+            <span class="material-icons">location_on</span>
+            <span id="currentPath">Current Path: </span>
+            <button class="btn btn-secondary" onclick="resetStepper()">Reset</button>
+        </div>
+        
+        <div class="stepper-container">
+            <div class="stepper-header">
+                <div class="step active" data-step="0">Select Zone</div>
+                <div class="step" data-step="1">Select Section</div>
+                <div class="step" data-step="2">Select Shelf</div>
+                <div class="step" data-step="3">Select Storage Unit</div>
+            </div>
+            
+            <div class="step-content">
+                <!-- Step 0: Zones -->
+                <div id="step0" class="step-panel">
+                    <h3>Choose a Zone</h3>
+                    <div class="search-container">
+                        <input type="text" class="search-field" placeholder="Search zones..." onkeyup="filterTable(0, this.value)">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Zone Code</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="zonesTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Step 1: Sections -->
+                <div id="step1" class="step-panel hidden">
+                    <h3 id="sectionTitle">Choose a Section</h3>
+                    <div class="search-container">
+                        <input type="text" class="search-field" placeholder="Search sections..." onkeyup="filterTable(1, this.value)">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Section Code</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sectionsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="goToStep(0)">Back</button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Shelves -->
+                <div id="step2" class="step-panel hidden">
+                    <h3 id="shelfTitle">Choose a Shelf</h3>
+                    <div class="search-container">
+                        <input type="text" class="search-field" placeholder="Search shelves..." onkeyup="filterTable(2, this.value)">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Shelf Code</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shelvesTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Storage Units -->
+                <div id="step3" class="step-panel hidden">
+                    <h3 id="storageTitle">Choose a Storage Unit</h3>
+                    <div class="search-container">
+                        <input type="text" class="search-field" placeholder="Search storage units..." onkeyup="filterTable(3, this.value)">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Unit Code</th>
+                                <th>Name</th>
+                                <th>Capacity</th>
+                                <th>Current</th>
+                                <th>Occupancy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="storageUnitsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+                        <button class="btn btn-primary" onclick="completeSelection()" id="completeBtn" style="display: none;">Complete Selection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock warehouse data service
+        const warehouseData = {
+            zones: [
+                { zoneCode: 'A', name: 'Receiving Zone', description: 'Incoming goods area' },
+                { zoneCode: 'B', name: 'Storage Zone', description: 'Main storage area' },
+                { zoneCode: 'C', name: 'Shipping Zone', description: 'Outgoing goods area' },
+                { zoneCode: 'D', name: 'Cold Storage Zone', description: 'Temperature controlled area' },
+                { zoneCode: 'E', name: 'Hazardous Zone', description: 'Special handling materials' }
+            ],
+            sections: [
+                { sectionCode: 'A01', name: 'Dock Area 1', zoneCode: 'A', description: 'Loading dock 1' },
+                { sectionCode: 'A02', name: 'Dock Area 2', zoneCode: 'A', description: 'Loading dock 2' },
+                { sectionCode: 'B01', name: 'General Storage 1', zoneCode: 'B', description: 'General merchandise' },
+                { sectionCode: 'B02', name: 'General Storage 2', zoneCode: 'B', description: 'General merchandise' },
+                { sectionCode: 'B03', name: 'Heavy Items', zoneCode: 'B', description: 'Heavy equipment storage' },
+                { sectionCode: 'C01', name: 'Shipping Area 1', zoneCode: 'C', description: 'Outbound processing' },
+                { sectionCode: 'C02', name: 'Shipping Area 2', zoneCode: 'C', description: 'Express shipping' },
+                { sectionCode: 'D01', name: 'Freezer Section', zoneCode: 'D', description: 'Frozen goods' },
+                { sectionCode: 'D02', name: 'Cooler Section', zoneCode: 'D', description: 'Refrigerated goods' },
+                { sectionCode: 'E01', name: 'Chemical Storage', zoneCode: 'E', description: 'Chemical materials' }
+            ],
+            shelves: [
+                { shelfCode: 'A01-S01', name: 'Shelf 1', sectionCode: 'A01', zoneCode: 'A', description: 'Top shelf' },
+                { shelfCode: 'A01-S02', name: 'Shelf 2', sectionCode: 'A01', zoneCode: 'A', description: 'Middle shelf' },
+                { shelfCode: 'A01-S03', name: 'Shelf 3', sectionCode: 'A01', zoneCode: 'A', description: 'Bottom shelf' },
+                { shelfCode: 'B01-S01', name: 'Aisle A', sectionCode: 'B01', zoneCode: 'B', description: 'Left aisle' },
+                { shelfCode: 'B01-S02', name: 'Aisle B', sectionCode: 'B01', zoneCode: 'B', description: 'Center aisle' },
+                { shelfCode: 'B01-S03', name: 'Aisle C', sectionCode: 'B01', zoneCode: 'B', description: 'Right aisle' },
+                { shelfCode: 'B02-S01', name: 'Rack 1', sectionCode: 'B02', zoneCode: 'B', description: 'Storage rack 1' },
+                { shelfCode: 'B02-S02', name: 'Rack 2', sectionCode: 'B02', zoneCode: 'B', description: 'Storage rack 2' },
+                { shelfCode: 'C01-S01', name: 'Pack Station 1', sectionCode: 'C01', zoneCode: 'C', description: 'Packing area 1' },
+                { shelfCode: 'C01-S02', name: 'Pack Station 2', sectionCode: 'C01', zoneCode: 'C', description: 'Packing area 2' }
+            ],
+            storageUnits: [
+                { storageUnitCode: 'A01-S01-U01', name: 'Unit 1A', shelfCode: 'A01-S01', sectionCode: 'A01', zoneCode: 'A', capacity: 100, currentOccupancy: 75 },
+                { storageUnitCode: 'A01-S01-U02', name: 'Unit 1B', shelfCode: 'A01-S01', sectionCode: 'A01', zoneCode: 'A', capacity: 100, currentOccupancy: 50 },
+                { storageUnitCode: 'A01-S01-U03', name: 'Unit 1C', shelfCode: 'A01-S01', sectionCode: 'A01', zoneCode: 'A', capacity: 100, currentOccupancy: 25 },
+                { storageUnitCode: 'B01-S01-U01', name: 'Bin 1A', shelfCode: 'B01-S01', sectionCode: 'B01', zoneCode: 'B', capacity: 200, currentOccupancy: 150 },
+                { storageUnitCode: 'B01-S01-U02', name: 'Bin 1B', shelfCode: 'B01-S01', sectionCode: 'B01', zoneCode: 'B', capacity: 200, currentOccupancy: 175 },
+                { storageUnitCode: 'B01-S01-U03', name: 'Bin 1C', shelfCode: 'B01-S01', sectionCode: 'B01', zoneCode: 'B', capacity: 200, currentOccupancy: 100 },
+                { storageUnitCode: 'B01-S02-U01', name: 'Box 2A', shelfCode: 'B01-S02', sectionCode: 'B01', zoneCode: 'B', capacity: 150, currentOccupancy: 125 },
+                { storageUnitCode: 'B01-S02-U02', name: 'Box 2B', shelfCode: 'B01-S02', sectionCode: 'B01', zoneCode: 'B', capacity: 150, currentOccupancy: 90 },
+                { storageUnitCode: 'C01-S01-U01', name: 'Slot 1A', shelfCode: 'C01-S01', sectionCode: 'C01', zoneCode: 'C', capacity: 50, currentOccupancy: 30 },
+                { storageUnitCode: 'C01-S01-U02', name: 'Slot 1B', shelfCode: 'C01-S01', sectionCode: 'C01', zoneCode: 'C', capacity: 50, currentOccupancy: 45 }
+            ]
+        };
+
+        // Current selection state
+        let currentStep = 0;
+        let selection = {
+            selectedZone: null,
+            selectedSection: null,
+            selectedShelf: null,
+            selectedStorageUnit: null
+        };
+
+        // Initialize the application
+        function init() {
+            populateZones();
+            updateStepperUI();
+        }
+
+        function populateZones() {
+            const tbody = document.getElementById('zonesTable');
+            tbody.innerHTML = '';
+            
+            warehouseData.zones.forEach(zone => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${zone.zoneCode}</td>
+                    <td>${zone.name}</td>
+                    <td>${zone.description}</td>
+                `;
+                row.onclick = () => selectZone(zone);
+                tbody.appendChild(row);
+            });
+        }
+
+        function selectZone(zone) {
+            selection.selectedZone = zone;
+            highlightSelectedRow(0, zone.zoneCode);
+            
+            // Load sections for this zone
+            const sections = warehouseData.sections.filter(s => s.zoneCode === zone.zoneCode);
+            populateSections(sections);
+            
+            document.getElementById('sectionTitle').textContent = `Choose a Section in Zone ${zone.name}`;
+            goToStep(1);
+            updateSelectionSummary();
+        }
+
+        function populateSections(sections) {
+            const tbody = document.getElementById('sectionsTable');
+            tbody.innerHTML = '';
+            
+            sections.forEach(section => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${section.sectionCode}</td>
+                    <td>${section.name}</td>
+                    <td>${section.description}</td>
+                `;
+                row.onclick = () => selectSection(section);
+                tbody.appendChild(row);
+            });
+        }
+
+        function selectSection(section) {
+            selection.selectedSection = section;
+            highlightSelectedRow(1, section.sectionCode);
+            
+            // Load shelves for this section
+            const shelves = warehouseData.shelves.filter(s => s.sectionCode === section.sectionCode);
+            populateShelves(shelves);
+            
+            document.getElementById('shelfTitle').textContent = `Choose a Shelf in Section ${section.name}`;
+            goToStep(2);
+            updateSelectionSummary();
+        }
+
+        function populateShelves(shelves) {
+            const tbody = document.getElementById('shelvesTable');
+            tbody.innerHTML = '';
+            
+            shelves.forEach(shelf => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${shelf.shelfCode}</td>
+                    <td>${shelf.name}</td>
+                    <td>${shelf.description}</td>
+                `;
+                row.onclick = () => selectShelf(shelf);
+                tbody.appendChild(row);
+            });
+        }
+
+        function selectShelf(shelf) {
+            selection.selectedShelf = shelf;
+            highlightSelectedRow(2, shelf.shelfCode);
+            
+            // Load storage units for this shelf
+            const storageUnits = warehouseData.storageUnits.filter(u => u.shelfCode === shelf.shelfCode);
+            populateStorageUnits(storageUnits);
+            
+            document.getElementById('storageTitle').textContent = `Choose a Storage Unit in Shelf ${shelf.name}`;
+            goToStep(3);
+            updateSelectionSummary();
+        }
+
+        function populateStorageUnits(storageUnits) {
+            const tbody = document.getElementById('storageUnitsTable');
+            tbody.innerHTML = '';
+            
+            storageUnits.forEach(unit => {
+                const occupancyRate = unit.capacity ? ((unit.currentOccupancy / unit.capacity) * 100).toFixed(1) + '%' : 'N/A';
+                const occupancyClass = getOccupancyClass(unit);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${unit.storageUnitCode}</td>
+                    <td>${unit.name}</td>
+                    <td>${unit.capacity || 'N/A'}</td>
+                    <td>${unit.currentOccupancy || 'N/A'}</td>
+                    <td class="${occupancyClass}">${occupancyRate}</td>
+                `;
+                row.onclick = () => selectStorageUnit(unit);
+                tbody.appendChild(row);
+            });
+        }
+
+        function selectStorageUnit(unit) {
+            selection.selectedStorageUnit = unit;
+            highlightSelectedRow(3, unit.storageUnitCode);
+            document.getElementById('completeBtn').style.display = 'inline-block';
+            updateSelectionSummary();
+        }
+
+        function getOccupancyClass(unit) {
+            if (!unit.capacity || !unit.currentOccupancy) return '';
+            const rate = (unit.currentOccupancy / unit.capacity) * 100;
+            if (rate >= 90) return 'occupancy-high';
+            if (rate >= 70) return 'occupancy-medium';
+            return 'occupancy-low';
+        }
+
+        function goToStep(stepIndex) {
+            // Hide all step panels
+            for (let i = 0; i <= 3; i++) {
+                document.getElementById(`step${i}`).classList.add('hidden');
+                const stepEl = document.querySelector(`[data-step="${i}"]`);
+                stepEl.classList.remove('active', 'completed');
+            }
+            
+            // Show current step
+            document.getElementById(`step${stepIndex}`).classList.remove('hidden');
+            const currentStepEl = document.querySelector(`[data-step="${stepIndex}"]`);
+            currentStepEl.classList.add('active');
+            
+            // Mark previous steps as completed
+            for (let i = 0; i < stepIndex; i++) {
+                const stepEl = document.querySelector(`[data-step="${i}"]`);
+                stepEl.classList.add('completed');
+            }
+            
+            currentStep = stepIndex;
+        }
+
+        function highlightSelectedRow(stepIndex, selectedValue) {
+            const tableIds = ['zonesTable', 'sectionsTable', 'shelvesTable', 'storageUnitsTable'];
+            const tbody = document.getElementById(tableIds[stepIndex]);
+            
+            // Remove previous selection
+            tbody.querySelectorAll('tr').forEach(row => row.classList.remove('selected'));
+            
+            // Add selection to current row
+            tbody.querySelectorAll('tr').forEach(row => {
+                const firstCell = row.cells[0].textContent;
+                if (firstCell === selectedValue) {
+                    row.classList.add('selected');
+                }
+            });
+        }
+
+        function updateSelectionSummary() {
+            const parts = [];
+            if (selection.selectedZone) parts.push(`Zone: ${selection.selectedZone.name}`);
+            if (selection.selectedSection) parts.push(`Section: ${selection.selectedSection.name}`);
+            if (selection.selectedShelf) parts.push(`Shelf: ${selection.selectedShelf.name}`);
+            if (selection.selectedStorageUnit) parts.push(`Storage Unit: ${selection.selectedStorageUnit.name}`);
+            
+            if (parts.length > 0) {
+                document.getElementById('currentPath').textContent = 'Current Path: ' + parts.join(' → ');
+                document.getElementById('selectionSummary').classList.remove('hidden');
+            } else {
+                document.getElementById('selectionSummary').classList.add('hidden');
+            }
+        }
+
+        function filterTable(stepIndex, searchValue) {
+            const tableIds = ['zonesTable', 'sectionsTable', 'shelvesTable', 'storageUnitsTable'];
+            const tbody = document.getElementById(tableIds[stepIndex]);
+            const rows = tbody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                const shouldShow = text.includes(searchValue.toLowerCase());
+                row.style.display = shouldShow ? '' : 'none';
+            }
+        }
+
+        function resetStepper() {
+            selection = {
+                selectedZone: null,
+                selectedSection: null,
+                selectedShelf: null,
+                selectedStorageUnit: null
+            };
+            
+            document.getElementById('completeBtn').style.display = 'none';
+            updateSelectionSummary();
+            goToStep(0);
+            
+            // Clear all search fields
+            document.querySelectorAll('.search-field').forEach(field => field.value = '');
+            
+            // Reset all table filters
+            for (let i = 0; i <= 3; i++) {
+                filterTable(i, '');
+            }
+        }
+
+        function completeSelection() {
+            alert(`Selection completed!\n\nFinal location:\n${document.getElementById('currentPath').textContent.replace('Current Path: ', '')}`);
+            console.log('Final selection:', selection);
+        }
+
+        // Initialize when page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
