@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@angular/material@19/prebuilt-themes/indigo-pink.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -40,47 +41,109 @@
             overflow: hidden;
         }
         
-        .stepper-header {
+        /* Material Design Stepper Styles */
+        .mat-stepper-horizontal {
             display: flex;
-            background-color: #f8f9fa;
+            flex-direction: column;
+        }
+        
+        .mat-horizontal-stepper-header-container {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            background-color: #fafafa;
             border-bottom: 1px solid #e0e0e0;
         }
         
-        .step {
+        .mat-horizontal-stepper-header {
+            display: flex;
+            align-items: center;
             flex: 1;
-            padding: 16px 24px;
-            text-align: center;
             cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 4px;
             transition: background-color 0.2s;
             position: relative;
-            border-right: 1px solid #e0e0e0;
         }
         
-        .step:last-child {
-            border-right: none;
+        .mat-horizontal-stepper-header:hover:not(.mat-step-header-selected):not(.mat-step-disabled) {
+            background-color: rgba(0,0,0,0.04);
         }
         
-        .step:hover:not(.active) {
-            background-color: #e3f2fd;
+        .mat-step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            background-color: rgba(0,0,0,0.38);
+            color: white;
+            position: relative;
         }
         
-        .step.disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        .step.disabled:hover {
-            background-color: inherit;
-        }
-        
-        .step.active {
+        .mat-step-header-selected .mat-step-icon {
             background-color: #1976d2;
             color: white;
         }
         
-        .step.completed {
-            background-color: #4caf50;
+        .mat-step-header-done .mat-step-icon {
+            background-color: #1976d2;
             color: white;
+        }
+        
+        .mat-step-header-done .mat-step-icon::after {
+            content: 'check';
+            font-family: 'Material Symbols Outlined';
+            font-size: 16px;
+            position: absolute;
+        }
+        
+        .mat-step-label {
+            font-size: 14px;
+            font-weight: 400;
+            color: rgba(0,0,0,0.87);
+            flex: 1;
+        }
+        
+        .mat-step-header-selected .mat-step-label {
+            color: #1976d2;
+            font-weight: 500;
+        }
+        
+        .mat-step-header-done .mat-step-label {
+            color: rgba(0,0,0,0.87);
+        }
+        
+        .mat-step-disabled {
+            cursor: not-allowed;
+        }
+        
+        .mat-step-disabled .mat-step-icon {
+            background-color: rgba(0,0,0,0.26);
+        }
+        
+        .mat-step-disabled .mat-step-label {
+            color: rgba(0,0,0,0.38);
+        }
+        
+        /* Stepper connector line */
+        .mat-horizontal-stepper-header:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -12px;
+            width: 24px;
+            height: 1px;
+            background-color: rgba(0,0,0,0.12);
+            z-index: 1;
+        }
+        
+        .mat-horizontal-stepper-header.mat-step-header-done:not(:last-child)::after {
+            background-color: #1976d2;
         }
         
         .step-content {
@@ -206,11 +269,25 @@
         </div>
         
         <div class="stepper-container">
-            <div class="stepper-header">
-                <div class="step active" data-step="0" onclick="navigateToStep(0)">Select Zone</div>
-                <div class="step" data-step="1" onclick="navigateToStep(1)">Select Section</div>
-                <div class="step" data-step="2" onclick="navigateToStep(2)">Select Shelf</div>
-                <div class="step" data-step="3" onclick="navigateToStep(3)">Select Storage Unit</div>
+            <div class="mat-stepper-horizontal">
+                <div class="mat-horizontal-stepper-header-container">
+                    <div class="mat-horizontal-stepper-header mat-step-header-selected" data-step="0" onclick="navigateToStep(0)">
+                        <div class="mat-step-icon">1</div>
+                        <div class="mat-step-label">Select Zone</div>
+                    </div>
+                    <div class="mat-horizontal-stepper-header mat-step-disabled" data-step="1" onclick="navigateToStep(1)">
+                        <div class="mat-step-icon">2</div>
+                        <div class="mat-step-label">Select Section</div>
+                    </div>
+                    <div class="mat-horizontal-stepper-header mat-step-disabled" data-step="2" onclick="navigateToStep(2)">
+                        <div class="mat-step-icon">3</div>
+                        <div class="mat-step-label">Select Shelf</div>
+                    </div>
+                    <div class="mat-horizontal-stepper-header mat-step-disabled" data-step="3" onclick="navigateToStep(3)">
+                        <div class="mat-step-icon">4</div>
+                        <div class="mat-step-label">Select Storage Unit</div>
+                    </div>
+                </div>
             </div>
             
             <div class="step-content">
@@ -374,7 +451,7 @@
         }
         
         function updateStepperClickability() {
-            const steps = document.querySelectorAll('.step');
+            const steps = document.querySelectorAll('.mat-horizontal-stepper-header');
             steps.forEach((step, index) => {
                 const stepIndex = parseInt(step.dataset.step);
                 
@@ -383,9 +460,9 @@
                     (stepIndex === 1 && selection.selectedZone) ||
                     (stepIndex === 2 && selection.selectedSection) ||
                     (stepIndex === 3 && selection.selectedShelf)) {
-                    step.classList.remove('disabled');
+                    step.classList.remove('mat-step-disabled');
                 } else {
-                    step.classList.add('disabled');
+                    step.classList.add('mat-step-disabled');
                 }
             });
         }
@@ -532,18 +609,21 @@
             for (let i = 0; i <= 3; i++) {
                 document.getElementById(`step${i}`).classList.add('hidden');
                 const stepEl = document.querySelector(`[data-step="${i}"]`);
-                stepEl.classList.remove('active', 'completed');
+                stepEl.classList.remove('mat-step-header-selected', 'mat-step-header-done');
+                stepEl.classList.add('mat-step-disabled');
             }
             
             // Show current step
             document.getElementById(`step${stepIndex}`).classList.remove('hidden');
             const currentStepEl = document.querySelector(`[data-step="${stepIndex}"]`);
-            currentStepEl.classList.add('active');
+            currentStepEl.classList.add('mat-step-header-selected');
+            currentStepEl.classList.remove('mat-step-disabled');
             
             // Mark previous steps as completed
             for (let i = 0; i < stepIndex; i++) {
                 const stepEl = document.querySelector(`[data-step="${i}"]`);
-                stepEl.classList.add('completed');
+                stepEl.classList.add('mat-step-header-done');
+                stepEl.classList.remove('mat-step-disabled', 'mat-step-header-selected');
             }
             
             currentStep = stepIndex;
